@@ -1,0 +1,243 @@
+---
+output: 
+  html_notebook: 
+    number_sections: yes
+    toc: yes
+---
+
+# box plotting
+```{r, collapse=TRUE}
+data("iris")
+str(iris)
+boxplot(as.list(iris[1:50, 1:4]))
+boxplot(Sepal.Length ~ Species, data = iris)
+pairs(iris[1:4], main = "Anderson's Iris Data -- 3 species",   pch = 21, 
+      bg = c("red", "green3", "blue")[unclass(iris$Species)])
+```
+
+# decision tree
+```{r}
+idx <- sample(2, nrow(iris), replace=TRUE, prob=c(0.7, 0.3))
+trainData <- iris[idx==1,]
+testData <- iris[idx==2,]
+
+#install.packages("party")
+require(party)
+formula <- Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width
+iris_ctree <- ctree(formula, data=trainData)
+pred <- predict(iris_ctree, testData)
+conf.mat <- table(pred, testData$Species)
+(accuracy <- sum(diag(conf.mat))/sum(conf.mat) * 100)
+plot(iris_ctree)
+```
+
+# data type
+```{r}
+
+sex <- factor("m", c("m", "f"))
+sex <- factor(c("m", "f", "m"))
+sex
+nlevels(sex)
+levels(sex)
+levels(sex) <- c("male", "female") # level 값 전체를 바꾸면, 해당 값을 가진 변수도 변한다. 
+sex
+ordered(c("a", "b", "c"))
+factor(c("a", "b", "c"), ordered=TRUE)
+```
+
+# vector
+```{r}
+x <- c(1, 3, 4)
+names(x) <- c("kim", "seo", "park")
+x
+
+x[c("kim")]
+x["kim"]
+nrow(x)
+NROW(x)
+
+"a" %in% c("a", "b", "c")
+"d" %in% c("a", "b", "c")
+setdiff(c("a", "b", "c"), c("a", "d"))
+union(c("a", "b", "c"), c("a", "d"))
+intersect(c("a", "b", "c"), c("a", "d"))
+
+seq(1, 5)
+seq(1, 5, 2)
+1:5   # vector를 생성함에 주의
+
+```
+
+#list
+```{r}
+x <- list(namw="foo", height=70)
+x
+x <- list(name="foo", height=c(1,3,5))
+x$name
+x$height
+x[1]
+x[[1]]
+x[2]
+x[[2]]
+
+```
+
+#matrix
+```{r}
+matrix(c(1,2,3,4,5,6,7,8,9),  nrow=3) # column major
+matrix(c(1,2,3,4,5,6,7,8,9),  ncol=3)
+matrix(c(1,2,3,4,5,6,7,8,9),  nrow=3, byrow=T) # row major
+matrix(c(1,2,3,4,5,6,7,8,9),  nrow=3, 
+                 dimnames=list(c("item1", "item2", "item3"), 
+                               c("feature1", "feature2", "feature3")))
+
+x <- matrix(c(1,2,3,4,5,6,7,8,9),  nrow=3)
+rownames(x) <- c("r1", "r2", "r3")
+colnames(x) <- c("c1", "c2", "c3")
+x
+
+x <- matrix(c(1,2,3,4,5,6,7,8,9),  nrow=3, 
+       dimnames=list(c("item1", "item2", "item3"), 
+                     c("feature1", "feature2", "feature3")))
+
+x
+x[ , "feature2"] >= 5
+x[ x[, "feature2"] >= 5 ,]
+
+x
+x[ , 2]>=5
+x[x[ , 2]>=5, ]
+
+```
+
+# matrix transpose
+```{r}
+x <- matrix(c(1,2,3,4,5,6,7,8,9),  nrow=3)
+x
+t(x)
+ncol(x)
+nrow(x)
+x %*% t(x)
+x * t(x)
+
+```
+
+# data.frame
+```{r}
+d <- data.frame(x=c(1,2,3,4,5), y=c(2,4,6,8,10))
+d
+x <- c(1,2,3,4,5)
+y <- c(2,4,6,8,10)
+z <- c("M", "F", "M", "F", "M")
+d <- data.frame(x, y, z)
+d
+str(d)
+d <- data.frame(x, y, z, stringsAsFactors = F)
+str(d) # 확인
+d$v <- c(3, 6, 9, 12, 15)
+d
+d$v2 <- c(10, 20, 30, 40, 50)
+d
+d$x
+d[1, ]
+d[ , "v"]
+d[ , c("x", "v")]
+d[d$x>3, ]
+d[ , "v", drop=F]
+
+x <- data.frame(1:3, 11:13)
+x
+colnames(x) <- c("col1", "col2")
+x
+rownames(x) <- c("row1", "row2", "row3")
+x
+
+x <- data.frame(matrix(c(1,2,3,4), ncol=2))
+x
+colnames(x) <- c("X", "Y")
+x <- data.frame(list(x=c(1,2), y=c(3,4)))
+str(x)
+
+```
+
+# if statements
+```{r}
+
+x <- c(1,2,3,4,5)
+result <- ifelse( x %% 2 == 0, "even", "odd")
+result
+```
+
+# for statements
+```{r}
+for (i in 1:10) { print(i) }
+
+i <- 1
+repeat {
+  print(i)
+  if (i >= 10) { break }
+  i <- i+1
+}
+
+i <- 0
+while (i < 10){
+  print(i)
+  i <- i+1
+}
+
+```
+
+# vector operation
+```{r}
+d <- data.frame(x=c(1,2,3,4,5), y=c("a", "b", "c", "d", "e"))
+d
+d[c(TRUE, FALSE, TRUE, FALSE, TRUE), ]
+d[d$x%%2==0, ]
+sum(c(1,2,3,4,5))
+sum(c(1,2,3,4,NA))
+sum(c(1,2,3,4,NA), na.rm = TRUE)
+mean(c(1,2,3,4,NA))
+mean(c(1,2,3,4,NA), na.rm = TRUE)
+
+x <- data.frame(a=c(1,2,3), b=c("a", NA, "c"), c=c("a", "b", NA))
+x
+na.omit(x)
+
+```
+
+# functions
+```{r}
+fibo <- function(n){
+  if (n==1 || n==2) { return(1)}
+  else { return(fibo(n-1)+fibo(n-2))}
+}
+
+fibo(2)
+fibo(10)
+fibo(20)
+fibo(50)
+
+f <- function(x, y) { print(x); print(y)}
+f(1,2)
+x <- c(1,2,3)
+y <- c(10, 20, 30)
+f(x, y)
+
+g <- function(z, ...){
+  print(z)
+  f(...)
+}
+
+g(1,2,3)
+
+```
+
+# call-by-value
+```{r}
+f <- function(x,i) {x[i] <- 4}
+w<-c(10,11,12,13)
+print(f(w, 1))
+w
+
+```
+
