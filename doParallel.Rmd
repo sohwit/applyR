@@ -18,9 +18,14 @@ getDoParWorkers()
 ```
 
   - Note: it is possible to use many more workers than number of cores, but it also increase overhead of dispatching tasks. So in some case, total execution time would be much longer than in sequential case.
+  
+  - Note: in order to check the number of cores, use the following: (Ubuntu)
+    > $ cat /proc/cpuinfo | grep processor
+    or 
+    > $ nproc
 
   - to create computational cluster manually
-    + Remember to unregister it, by calling *stopCluster()* funtion, when we have finished our work.
+    + Remember to unregister it, by calling *stopCluster()* funtion, when you have finished the given work.
 
 ```{r}
 cl <- makeCluster(2)  
