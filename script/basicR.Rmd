@@ -232,3 +232,135 @@ w
 
 ```
 
+
+# read/write CSV
+```{r}
+setwd("~/R/workspace/lecture/data")
+x <- read.csv("a.csv", stringsAsFactors = F)
+x <- read.csv("a.csv", na.strings = c("NIL"))
+write.csv(x, "b.csv", row.names = F)
+
+```
+
+# read Excel data I/O
+```{r}
+#install.packages("xlsx")
+require(xlsx)
+#install.packages("rJava")
+#Sys.setenv(JAVA_HOME="C:\\Program Files\\Java\\jre1.8.0_91")
+
+titanic <- read.xlsx("titanic3.xls", sheetIndex=1)
+str(titanic)
+head(titanic)
+tnames <- colnames(titanic)
+View(titanic)
+tnames
+titanic$name <- as.character(titanic$name)
+str(titanic)
+
+
+file <- "./usarrests.xlsx"
+res <- write.xlsx(USArrests, file)  
+
+```
+
+# 객체 삭제
+```{r}
+ls()
+rm(list = ls())
+rm(list = c("x", "y"))
+
+```
+
+# apply() 계열 함수
+```{r}
+head(iris)
+apply(iris[, 1:4], 2, sum)
+apply(iris[, 1:4], 2, mean)
+apply(iris[, 1:4], 2, median)
+
+colSums(iris[, 1:4])
+
+apply(iris[ , 1], 2, sum) # doesn't work 
+colSums(iris[ , 1])       # doesn't work
+sum(iris[, 1])
+
+f2 <- function(x) { return(x*2)}
+result <- lapply(1:3, f2)
+result
+unlist(result) # list to vecor
+
+
+(result <- lapply(iris[, 1:4], mean))
+unlist(result)
+colMeans(iris[, 1:4])
+
+res <- unlist(lapply(iris[, 1:4], mean))
+m <- matrix(res, ncol=4, byrow=TRUE)
+d <- as.data.frame(m)
+d
+names(d) <- names(iris[, 1:4])
+d
+
+data.frame(do.call(cbind, lapply(iris[, 1:4], mean)))
+
+x <- sapply(iris[, 1:4], mean)
+x
+as.data.frame(x)
+as.data.frame(t(x))
+
+x <- as.matrix(iris[, 1:4])
+x
+x %*% t(x)
+t(x) %*% x
+
+# 결과가 matrix인 sapply()의 예
+y <- sapply(iris[, 1:4], function(x) { x>3 })
+y
+
+mapply(paste,
+       c(1,2,3,4,5),
+       c("a", "b", "c", "d", "e"),
+       c("A", "B", "C", "D", "E"),
+       MoreArgs=list(sep="-"))
+
+# tapply()
+rep(1, 10)
+tapply(1:10, rep(1, 10), sum)
+tapply(1:10, 1:10 %% 2 == 1, sum)
+tapply(iris$Sepal.Length, iris$Species, mean)
+
+
+# sorting
+x <- c(20, 11, 33, 50, 47)
+sort(x)
+sort(x, decreasing = T)
+
+order(x)
+order(-x)
+
+worder <- order(iris$Sepal.Width)
+iris[worder, ]
+head(iris[worder, ])
+
+table(iris$Species)
+
+llist <- split(iris$Sepal.Length, iris$Species)
+sapply(llist, mean)
+# 동일한 코드
+tapply(iris$Sepal.Length, iris$Species, mean)
+```
+
+
+# subset
+```{r}
+iris
+subset(iris, iris$Species == "setosa")
+iris[iris$Species=="setosa", ]
+
+subset(iris, iris$Species == "setosa" & Sepal.Length > 5.0)
+iris[iris$Species=="setosa" & iris$Sepal.Length > 5.0, ]
+
+subset(iris, iris$Species == "setosa" & Sepal.Length > 5.0, select=c(Sepal.Length, Species))
+```
+
