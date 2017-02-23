@@ -1,5 +1,7 @@
 # Parallel processing in r
-  - Well explained tutorial: <http://blog.aicry.com/r-parallel-computing-in-5-minutes/>
+  - Well explained tutorial: 
+    + <http://blog.aicry.com/r-parallel-computing-in-5-minutes/>
+    + <http://gforge.se/2015/02/how-to-go-parallel-in-r-basics-tips/>
   - caret support parallel training: <http://sshaikh.org/2015/05/06/parallelize-machine-learning-in-r-with-multi-core-cpus/>
     + With a registered parallel backend, any caret model training will use multi-cores of the CPU, since by default the trainControl argument is already set as allowParallel=TRUE.
 
@@ -8,12 +10,14 @@ library(doParallel)
 
 system.time(foreach(i=1:10000) %do% sum(tanh(1:i)))
 
-registerDoParallel() 
+no_cores <- detectCores() - 1
+registerDoParallel(no_cores)  # if you do not specify no_cores, half of cpus will be used by default.
 system.time(foreach(i=1:10000) %dopar% sum(tanh(1:i)))
 
 getDoParWorkers()
 
-registerDoSEQ()  
+stopImplicitCluster()
+registerDoSEQ()
 getDoParWorkers()
 ```
 
@@ -24,13 +28,16 @@ getDoParWorkers()
     
     > $ nproc
 
-  - to create computational cluster manually
+  - When you create computational cluster manually
     + Remember to unregister it, by calling *stopCluster()* funtion, when you have finished the given work.
 
 ```{r}
-cl <- makeCluster(2)  
+no_cores <- detectCores() - 1
+cl <- makeCluster(no_cores)  
 registerDoParallel(cl)  
+
 system.time(foreach(i=1:10000) %dopar% sum(tanh(1:i)))  
+
 stopCluster(cl)
 ```
 
