@@ -57,7 +57,7 @@ class(results)
     + a data frame which store in each row results from one iteration.
 ```{r}
 results = foreach(i=1:10, .combine=rbind) %dopar% {  
-  data.frame(feature=rnorm(10))
+  t(data.frame(feature=rnorm(10)))
 }
 class(results)
 ```
