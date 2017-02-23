@@ -207,8 +207,6 @@ fibo <- function(n){
 
 fibo(2)
 fibo(10)
-fibo(20)
-fibo(50)
 
 f <- function(x, y) { print(x); print(y)}
 f(1,2)
