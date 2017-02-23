@@ -1,0 +1,392 @@
+# iris
+## Data exploration 
+```{r}
+table(iris$Species)
+pie(table(iris$Species))
+plot(iris$Species)
+hist(iris$Sepal.Length)
+
+
+par(mfrow = c(2, 2)) # plotting 영역 나누기
+boxplot(iris$Sepal.Length)
+boxplot(iris[iris$Species=='setosa', 1:4])
+boxplot(iris[iris$Species=='versicolor', 1:4])
+boxplot(iris[iris$Species=='virginica', 1:4])
+
+par(mfrow = c(1, 1))
+boxplot(Sepal.Length ~ Species, data = iris, main = "Sepal.Length ~ Species")
+boxplot(Sepal.Width ~ Species, data = iris,  main = "Sepal.Width ~ Species" )
+boxplot(Sepal.Length ~ Species, data = iris, main = "Sepal.Length ~ Species" )
+boxplot(Petal.Width ~ Species, data = iris,  main = "Petal.Width ~ Species" )
+
+pairs(iris[ , 1:4], pch = 21, psize = 10,
+      bg = c("red", "yellow", "blue")[unclass(iris$Species)])
+```
+
+
+## Decision Trees
+```{r}
+data(iris)
+idx <- sample(2, nrow(iris), replace=TRUE, prob=c(0.7, 0.3))
+trainData <- iris[idx==1, ]
+testData  <- iris[idx==2, ]
+
+# 다른 방식: 
+# idx <- sample(nrow(iris), ceiling(nrow(iris)* 0.70))
+# trainData  <- iris[idx, ]
+# testData   <- iris[-idx, ]
+
+library(party)
+#formula <- Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width
+formula <- Species ~ Sepal.Length + Sepal.Width + Petal.Length # Petal.Length와 Petal.Width 상관성 큼
+formula <- Species ~ Sepal.Width + Petal.Length # pairs 그래프를 기반으로 2개의 feature만 사용
+
+iris_ctree <- ctree(formula, data=trainData)
+pred <- predict(iris_ctree, testData)
+(conf.mat <- table(pred, testData$Species))
+(accuracy <- sum(diag(conf.mat))/sum(conf.mat) * 100)
+plot(iris_ctree)
+```
+
+
+## k-NN 
+```{r}
+train.idx <- sample(nrow(iris), ceiling(nrow(iris)* 0.70))
+test.idx <- (1:nrow(iris)) [- train.idx]
+library(class)
+
+cl <- iris[, "Species"]   ## 같은 표현: cl <- iris$Species
+iris2 <- iris[ , !colnames(iris) %in% "Species"] # Species 컬럼 삭제
+# 위와 동일한 표현: iris2 <- iris[ , 1:4] # Species 컬럼 삭제
+
+pred <- knn(iris2[train.idx,], iris2[test.idx, ], cl[train.idx], k=3)
+conf.mat <- table("Predictions" = pred, Actual = cl[test.idx])
+(accuracy <- sum(diag(conf.mat) / length(test.idx) * 100))
+```
+
+
+# AdultUCI
+## Data exploration
+```{r}
+library(arules)
+data(AdultUCI)
+
+tab <- table(AdultUCI$income)
+pie(tab)
+barplot(tab)
+
+cc <- complete.cases(AdultUCI) # removing the rows having NA values 
+complete.Adult <-AdultUCI[cc,]
+# 위의 2문장을 하나로 하면:  complete.Adult <- na.omit(AdultUCI)
+
+myAdult <- complete.Adult[,c(1,3,5,11,12,13,15)] 
+myAdult.large <- myAdult[myAdult$income=="large", ]
+myAdult.small <- myAdult[myAdult$income=="small", ] 
+boxplot(as.list(myAdult.large[,-7]), main = "large") 
+boxplot(as.list(myAdult.small[,-7]), main = "small")
+
+boxplot(age ~ income, data = myAdult,  main = "age ~ income" )
+boxplot(fnlwgt ~ income, data = myAdult,  main = "fnlwgt ~ incom" )
+
+boxplot(education-num ~ income, data = myAdult,  main = "age ~ education-num" )
+# => 에러 발생
+# 그래서 아래와 같이 컬럼명을 변경함
+colnames(myAdult) <- c("age", "fnlwgt", "edu_num", "cap_gain", "cap_loss", "hours", "income")
+#names(myAdult)
+#colnames(myAdult)
+
+boxplot(edu_num ~ income, data = myAdult,  main = "edu_num ~ income" )
+boxplot(cap_gain ~ income, data = myAdult,  main = "cap_gain ~ income" )
+boxplot(cap_loss ~ income, data = myAdult,  main = "cap_loss ~ income" )
+boxplot(hours ~ income, data = myAdult,  main = "hours ~ income" )
+
+pairs(myAdult[1:6], main = "Adult Data -- 2 classes", pch = 21, 
+      bg = c("red", "green3")[unclass(myAdult$income)])
+```
+
+
+## Decision tree
+```{r}
+cc <- complete.cases(AdultUCI) # removing the row having NA values
+complete.Adult <-AdultUCI[cc,]
+# 위의 2문장을 하나로 하면:  complete.Adult <- na.omit(AdultUCI)
+
+myAdult <- complete.Adult
+
+# 속성 명칭을 변경
+colnames(myAdult) <- c("age", "workclass", "fnlwgt", "edu", "edu_num", "marial", "occupation", "relationship", "race", "sex", "cap_gain", "cap_loss", "hours", "nat_country", "income")
+# 학습데이터 비율을 70%로 설정
+idx <- sample(2, nrow(myAdult), replace=TRUE, prob=c(0.7, 0.3))
+trainData <- myAdult[idx==1,]
+testData  <- myAdult[idx==2,]
+
+library(party)
+library(FSelector) # for as.simple.formula
+flist <- names(myAdult)
+flist <- flist[1:14]  # class 속성(income)은 제거한 속성 집합을 생성
+formula <- as.simple.formula(flist, "income")  
+myAdult_ctree <- ctree(formula, data=trainData)
+conf.mat <- table("pred"=predict(myAdult_ctree), "actual"=trainData$income)
+(accuracy <- sum(diag(conf.mat))/sum(conf.mat) * 100)
+plot(myAdult_ctree)
+
+### feature selection
+weights <- random.forest.importance(income~., myAdult, importance.type = 2)
+flist <- cutoff.k.percent(weights, 0.8)  # 전체 속성에서 비중값이 70% 이상인 속성 선택
+
+# 다른 feature selection => flist <- cfs(income~., myAdult)
+
+formula <- as.simple.formula(flist, "income")
+
+myAdult_ctree <- ctree(formula, data=trainData)
+conf.mat <- table("pred"=predict(myAdult_ctree), "actual"=trainData$income)
+(accuracy <- sum(diag(conf.mat))/sum(conf.mat) * 100)
+plot(myAdult_ctree)
+```
+
+
+## k-NN 
+```{r}
+cc <- complete.cases(AdultUCI) # removing the row having NA values
+complete.Adult <-AdultUCI[cc,]
+myAdult <- complete.Adult
+cl <- myAdult$income   # class 속성 값을 따로 저장시켜 둠
+
+conidx <- c(1,3,5,11:13);  disidx <- c(2,4,6:10,14)
+flist <- names(myAdult)
+flist[conidx]
+flist[disidx]
+
+library(fpc)
+# => 이산형 데이터를 수치형 데이터로 변환
+recAdult <- discrete.recode(myAdult, xvarsorted=FALSE, continuous=conidx, discrete=disidx)  
+# => recAdult 객체의 ‘data’ 속성에 변환 결과가 존재
+myAdult <- recAdult$data  # => recAdult는 리스트 형태, 그 안에 $data 키속성에 변환결과가 있음
+# 대신 속성(컬럼) 명칭이 유실되어, 이를 복구 시킴
+colnames(myAdult) <- c(flist[conidx], flist[disidx])
+
+
+train.idx <- sample(nrow(myAdult), ceiling(nrow(myAdult)* 0.70))
+test.idx <- (1:nrow(myAdult)) [- train.idx]
+pred <- knn(myAdult[train.idx, ], myAdult[test.idx, ], cl[train.idx], k=25)
+
+conf.mat <- table("Predictions" = pred, Actual = cl[test.idx])
+(accuracy <- sum(diag(conf.mat) / length(test.idx) * 100))
+
+# feature selection
+myAdult <- cbind(myAdult, cl)
+flist <- cfs(cl~., as.data.frame(myAdult))  ## class컬럼이 있어야 feature selection 할 수 있음
+myAdult <- myAdult[, flist]  # chooose only the selected features
+
+train.idx <- sample(nrow(myAdult), ceiling(nrow(myAdult)* 0.70))
+test.idx <- (1:nrow(myAdult)) [- train.idx]
+pred <- knn(myAdult[train.idx,], myAdult[test.idx, ], cl[train.idx], k=25)
+conf.mat <- table("Predictions" = pred, Actual = cl[test.idx])
+(accuracy <- sum(diag(conf.mat) / length(test.idx) * 100))
+
+# 또 다른 feature selection
+myAdult <- cbind(myAdult, cl)
+weights <- random.forest.importance(cl~., as.data.frame(myAdult), importance.type = 1) 
+flist <- cutoff.k.percent(weights, 0.70)   ## feature selection
+myAdult <- myAdult[, flist]  # chooose only the selected features
+
+train.idx <- sample(nrow(myAdult), ceiling(nrow(myAdult)* 0.70))
+test.idx <- (1:nrow(myAdult)) [- train.idx]
+pred <- knn(myAdult[train.idx,], myAdult[test.idx, ], cl[train.idx], k=25)
+conf.mat <- table("Predictions" = pred, Actual = cl[test.idx])
+(accuracy <- sum(diag(conf.mat) / length(test.idx) * 100))
+```
+
+
+## Support Vector Machine
+```{r}
+cc <- complete.cases(AdultUCI) # removing the row having NA values
+complete.Adult <-AdultUCI[cc,]
+myAdult <- complete.Adult
+colnames(myAdult) <- c("age", "workclass", "fnlwgt", "edu", "edu_num", "marial", "occupation", "relationship", "race", "sex", "cap_gain", "cap_loss", "hours", "nat_country", "income")
+
+income <- myAdult[, "income"]   ## cl <- myAdult$income
+
+conidx <- c(1,3,5,11:13); disidx <- c(2,4,6:10,14)
+
+flist <- names(myAdult); flist[conidx]; flist[disidx]
+
+library(fpc)
+recAdult <- discrete.recode(myAdult, xvarsorted=FALSE, continuous=conidx, discrete=disidx); myAdult <- recAdult$data
+
+colnames(myAdult) <- c(flist[conidx], flist[disidx]); 
+
+train.idx <- sample(nrow(myAdult), ceiling(nrow(myAdult)* 0.70))
+test.idx <- (1:nrow(myAdult)) [- train.idx]
+
+
+myAdult <- cbind(myAdult, income) # class 속성 포함
+#install.packages("kernlab")
+library(kernlab)
+rbf <- rbfdot(sigma = 0.1)
+myAdultsvm <- ksvm(income ~ ., data=myAdult[train.idx,], type="C-svc", kernel=rbf, 
+                   prob.model=TRUE);  myAdultsvm
+
+myAdult <- myAdult[, -15] # class 속성 제거
+pred <- predict(myAdultsvm, myAdult[test.idx,])
+
+conf.mat <- table("Predictions" = pred,  Actual = income[test.idx])
+(accuracy <- sum(diag(conf.mat) / length(test.idx) * 100))
+```
+
+## Naive Bayes
+```{r}
+library(e1071)
+cc <- complete.cases(AdultUCI) # removing the row having NA values
+complete.Adult <-AdultUCI[cc,]
+myAdult <- complete.Adult
+
+train.idx <- sample(nrow(myAdult), ceiling(nrow(myAdult)* 0.70))
+test.idx <- (1:nrow(myAdult)) [- train.idx]
+
+myAdultNB <- naiveBayes(income ~ ., data = myAdult[train.idx,])
+pred <- predict(myAdultNB, myAdult[test.idx,])
+
+conf.mat <- table("Predictions" = pred, Actual = income[test.idx])
+(accuracy <- sum(diag(conf.mat) / length(test.idx) * 100))
+```
+
+
+
+# wine
+## k-NN
+```{r}
+library(HDclassif); library(class)
+data(wine);  myWine <- wine
+colnames(myWine)[1] <- c("winetype") # renaming
+winetype <- myWine$winetype 
+
+train.idx <- sample(nrow(myWine), ceiling(nrow(myWine)* 0.70))
+test.idx <- (1:nrow(myWine)) [- train.idx]
+
+pred <- knn(myWine[train.idx,], myWine[test.idx, ], winetype[train.idx], k=30)
+conf.mat <- table("Predictions" = pred, Actual = winetype[test.idx])
+(accuracy <- sum(diag(conf.mat) / length(test.idx) * 100))
+```
+
+
+## Decision tree
+```{r}
+library(HDclassif); library(class); library(party)
+data(wine);  myWine <- wine
+colnames(myWine)[1] <- c("winetype") # renaming
+winetype <- myWine$winetype 
+
+winetype[winetype==1] <- "white"
+winetype[winetype==2] <- "red"
+winetype[winetype==3] <- "rose"
+myWine <- myWine[-1]
+myWine <- cbind(winetype, myWine)
+
+trainData <- myWine[idx==1,]
+testData  <- myWine[idx==2,]
+
+flist <- names(myWine)
+flist <- flist[-1]
+#flist <- cfs(winetype~., myWine)
+formula <- as.simple.formula(flist, "winetype")  
+myWine_ctree <- ctree(formula, data=trainData)
+#myWine <- myWine[-1]
+#testData <- testData[-1]
+pred <- predict(myWine_ctree, testData)
+conf.mat <- table("pred"=pred, "actual"=testData$winetype)
+(accuracy <- sum(diag(conf.mat))/sum(conf.mat) * 100)
+plot(myWine_ctree)
+```
+
+## SVM
+```{r}
+library(HDclassif); library(class)
+data(wine);  myWine <- wine
+colnames(myWine)[1] <- c("winetype") # renaming
+winetype <- myWine$winetype 
+
+train.idx <- sample(nrow(myWine), ceiling(nrow(myWine)* 0.70))
+test.idx <- (1:nrow(myWine)) [- train.idx]
+
+rbf <- rbfdot(sigma = 0.1)
+myWinesvm <- ksvm(winetype ~., data=myWine[train.idx,], type="C-svc", kernel=rbf, prob.model=TRUE);  myWinesvm
+
+#myWine <- myWine[, -1] # removing the class column 
+pred <- predict(myWinesvm, myWine[test.idx,])
+
+conf.mat <- table("Predictions" = pred,  Actual = winetype[test.idx])
+(accuracy <- sum(diag(conf.mat) / length(test.idx) * 100))
+```
+
+
+# cars
+## Regression
+```{r}
+data(cars)
+head(cars)
+m <- lm(dist ~ speed, data=cars)
+coef(m)
+fitted(m)
+residuals(m)
+
+predict(m, newdata=data.frame(speed=50)) # 하나의 값을 입력하여 예측
+predict(m, newdata=data.frame(speed=c(50, 60, 70))) # 3개의 값을 입력하여 예측
+predict(m, newdata=data.frame(speed=50), interval = "confidence") # 신뢰구간 포함
+predict(m, newdata=data.frame(speed=seq(4.0, 25.0, 0.2)), interval = "confidence") # 신뢰구간 포함
+
+plot(cars$speed, cars$dist)
+abline(coef(m))
+```
+
+## multiple linear regression
+```{r}
+m <- lm(Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width, data=iris)
+m
+(x <- data.frame(Sepal.Width=c(2, 3), Petal.Length=c(3,4), Petal.Width=c(5,2))) 
+# 전체 괄호를 하면, 계산 후 바로 출력해줌
+predict(m, newdata = x)
+```
+
+# Stackloss
+```{r}
+data(stackloss)
+str(stackloss)
+?stackloss # data에 대한 자세한 설명 확인
+attach(stackloss)
+
+stackloss.lm <- lm(stack.loss ~ Air.Flow + Water.Temp + Acid.Conc.)
+stackloss.lm
+newdata <- data.frame(Air.Flow = 72, Water.Temp = 20, Acid.Conc. = 85)
+predict(stackloss.lm, newdata)
+newdata <- data.frame(Air.Flow = c(72, 55, 33), Water.Temp = c(20, 21, 22), Acid.Conc. = c(85, 86, 87) )
+predict(stackloss.lm, newdata)
+
+detach(stackloss)
+```
+
+# others
+## 독립feature변수에 범주형변수 species 추가해보자.
+```{r}
+m <- lm(Sepal.Length ~ . , data = iris)
+m
+summary(m)
+
+x <- data.frame(Sepal.Width = 5, Petal.Length = 4, Petal.Width = 6, Species = "setosa")
+x
+predict(m, newdata = x)
+
+```
+
+## 시각화
+```{r}
+with(iris, plot(Sepal.Width, Sepal.Length, cex = 0.7, pch = as.numeric(Species)))
+legend("topright", levels(iris$Species), pch=1:3, bg="white")
+m <- lm(Sepal.Length ~ Sepal.Width + Species, data=iris)
+m
+abline(a=2.25, b=0.80, lty=1)
+abline(a=2.25+0.8036, b=0.80, lty=2)
+abline(a=2.25+0.19468, b=0.80, lty=3)
+
+```
+

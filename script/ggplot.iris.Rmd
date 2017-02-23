@@ -1,0 +1,110 @@
+ggplot with iris
+```{r}
+#install.packages("ggplot2")
+library(ggplot2)
+qplot(diamonds$carat, diamonds$price)
+qplot(iris$Petal.Width, iris$Sepal.Width, data = iris, colour = Species)
+qplot(carat, price, data = diamonds)
+qplot(carat, price, data = diamonds, geom="point" , colour=clarity) # -- (1)
+library(stats)
+qplot(carat, price, data = diamonds, geom=c("point", "smooth"), method=lm)
+qplot(carat, data = diamonds,geom="histogram")
+qplot(carat, data = diamonds,geom="histogram", binwidth=0.2, colour=clarity)
+
+length <- c(2.00, 1.00, 4.00, 9.00)
+width <- c(3.00, 2.00, 5.00, 10.00)
+depth <- c(4.00, 1.00, 15.00, 80.00)
+trt <- c("a", "a", "b", "b")
+tdata <- data.frame(length, width, depth, trt)
+qplot(length, width, data = tdata, colour = trt)
+qplot(carat, price, data = diamonds, geom="point" , colour=clarity) #--(1)
+
+ggplot(data=diamonds, aes(x=carat,y=price)) + geom_point(aes(colour=clarity))#--(2)
+
+length <- c(2.00, 1.00, 4.00, 9.00)
+width <- c(3.00, 2.00, 5.00, 10.00)
+depth <- c(4.00, 1.00, 15.00, 80.00)
+trt <- c("a", "a", "b", "b")
+tdata <- data.frame(length, width, depth, trt)
+
+ggplot(tdata, aes(x=length, y=width)) +
+  geom_point(aes(colour=trt)) + geom_smooth()
+
+ggplot(data=diamonds, aes(x=carat, y=price)) +
+  geom_point(aes(colour=clarity)) + geom_smooth()
+
+ggplot(data=diamonds, aes(x=carat, y=price, colour=clarity)) +
+  geom_point() + geom_smooth()
+
+ggplot(data=diamonds, aes(x=carat, y=price, colour=clarity)) + 
+      #+ geom_point(colour='darkblue')
+      geom_point(colour='red')
+
+
+p <- ggplot(data=diamonds, aes(x=carat,y=price))
+p + geom_smooth() 
+p + geom_smooth(aes(group=clarity)) 
+
+ggplot(data=diamonds, aes(x=price)) + geom_bar()
+ggplot(data=diamonds, aes(x=price)) + geom_bar(aes(y=..count..)) 
+ggplot(data=diamonds, aes(x=price)) + geom_bar(aes(y=..density..))
+ggplot(data=diamonds, aes(x=price)) + geom_bar(aes(y=..ncount..))
+ggplot(data=diamonds, aes(x=price)) + geom_bar(aes(y=..ndensity..))
+ggplot(data=diamonds, aes(x=price)) + geom_bar(aes(y=..density..)) + ylab("?е?")
+
+
+p <- ggplot(data=diamonds, aes(carat, price, color=clarity))
+p + geom_boxplot()
+
+ggplot(data=diamonds, aes(x=price)) + geom_bar(aes(fill=cut))
+ggplot(data=diamonds, aes(x=price)) + geom_bar(aes(fill=cut), position="dodge")
+ggplot(data=diamonds, aes(x=price)) + geom_bar(aes(fill=cut), position="fill")
+
+d <- ggplot(diamonds, aes(price))
+d + stat_bin(geom="bar")
+d + stat_bin(geom="area")
+d + stat_bin(aes(size=..ndensity..),geom="point")
+d + stat_bin(aes(y=1, fill=..density..),geom="tile")
+
+
+# geom_bar
+g <- ggplot(mpg, aes(class))
+# Number of cars in each class:
+g + geom_bar()
+
+ggplot(diamonds, aes(carat)) +
+  geom_histogram()
+ggplot(diamonds, aes(carat)) +
+  geom_histogram(binwidth = 0.01)
+
+ggplot(diamonds, aes(carat)) + geom_histogram(binwidth = 1)
+
+ggplot(diamonds, aes(carat)) + 
+  geom_histogram(aes(fill=cut), binwidth = 1, position="dodge")
+
+p <- ggplot(iris, aes(Species, Sepal.Width))
+p + geom_boxplot()
+
+ggplot(diamonds, aes(carat)) +
+  geom_density()
+
+ggplot(diamonds, aes(carat)) +
+  geom_density(adjust = 1/5)
+
+ggplot(diamonds, aes(carat)) +
+  geom_density(adjust = 5)
+
+ggplot(diamonds, aes(depth, fill = cut, colour = cut)) +
+  geom_density(alpha = 0.1) +
+  xlim(55, 70)
+
+ggplot(diamonds, aes(depth), fill = cut) +
+  geom_density(alpha = 0.1) +
+  xlim(55, 70)
+
+ggplot(diamonds, aes(carat)) +
+  geom_density(position = "stack")
+
+ggplot(diamonds, aes(carat, fill = cut)) +
+  geom_density(position = "stack")
+```
