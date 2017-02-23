@@ -19,9 +19,9 @@ getDoParWorkers()
 
   - Note: it is possible to use many more workers than number of cores, but it also increase overhead of dispatching tasks. So in some case, total execution time would be much longer than in sequential case.
   
-  - Note: in order to check the number of cores, use the following: (Ubuntu)
+  - Note: in order to check the number of cores, you can use one of the followings: (Ubuntu)
     > $ cat /proc/cpuinfo | grep processor
-    or 
+    
     > $ nproc
 
   - to create computational cluster manually
