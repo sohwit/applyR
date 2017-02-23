@@ -1,13 +1,8 @@
----
-title: "Spectrum Analysis"
-output: html_notebook
----
-
-## 1. Fourier Transform
+# 1. Fourier Transform
   - reference: <http://www.di.fc.ul.pt/~jpn/r/fourier/fourier.html>
     + 2013.  
     
-#### 1.1 Complex Wave
+## 1.1 Complex Wave
 
 ```{r, echo = FALSE}
 setwd("~/R/workspace/plant/script/exercise")
@@ -25,7 +20,7 @@ wave.3 <- 0.5 * wave.1 + 0.25 * wave.2
 plot(xs,wave.3,type="l"); title("Eg complex wave"); abline(h=0,lty=3)
 ```
 
-#### 1.2 Fourier Series
+## 1.2 Fourier Series
   - Joseph Fourier showed that any periodic wave can be represented by a sum of simple sine waves.  
 ```{r, echo = FALSE}
 wave.4 <- wave.3
@@ -71,21 +66,21 @@ f <- function(t,w) {
 plot.fourier(f,f.0,ts)   
 ```
 
-#### 1.3 Phase Shifts
+## 1.3 Phase Shifts
 
 ```{r, echo = FALSE}
 component.delay <- c(pi/2,0)       # delay of signal components (radians)
 plot.fourier(f,f.0,ts)   
 ```
 
-#### 1.4 DC Components
+## 1.4 DC Components
 
 ```{r, echo = FALSE}
 dc.component <- -2
 plot.fourier(f,f.0,ts)  
 ```
 
-#### 1.5 Fourier Transform
+## 1.5 Fourier Transform
   - a stationary trajectory:
 ```{r, echo = FALSE}
 library(stats)
@@ -183,7 +178,7 @@ plot.harmonic(X.k,3,ts,acq.freq,"blue")
 ```
 
 
-#### 1.6.Examples
+## 1.6.Examples
 
 ```{r, echo = FALSE}
 acq.freq <- 100                    # data acquisition (sample) frequency (Hz)
