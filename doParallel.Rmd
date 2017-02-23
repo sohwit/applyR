@@ -1,0 +1,85 @@
+---
+title: "doParallel"
+output: 
+  html_notebook: 
+    number_sections: yes
+    toc: yes
+---
+
+# Parallel processing in r
+  - Well explained tutorial: <http://blog.aicry.com/r-parallel-computing-in-5-minutes/>
+  - caret support parallel training: <http://sshaikh.org/2015/05/06/parallelize-machine-learning-in-r-with-multi-core-cpus/>
+    + With a registered parallel backend, any caret model training will use multi-cores of the CPU, since by default the trainControl argument is already set as allowParallel=TRUE.
+
+```{r}
+library(doParallel) 
+
+system.time(foreach(i=1:10000) %do% sum(tanh(1:i)))
+
+registerDoParallel() 
+system.time(foreach(i=1:10000) %dopar% sum(tanh(1:i)))
+
+getDoParWorkers()
+
+registerDoSEQ()  
+getDoParWorkers()
+```
+
+  - Note: it is possible to use many more workers than number of cores, but it also increase overhead of dispatching tasks. So in some case, total execution time would be much longer than in sequential case.
+
+  - to create computational cluster manually
+    + Remember to unregister it, by calling *stopCluster()* funtion, when we have finished our work.
+
+```{r}
+cl <- makeCluster(2)  
+registerDoParallel(cl)  
+system.time(foreach(i=1:10000) %dopar% sum(tanh(1:i)))  
+stopCluster(cl)
+```
+
+
+## Merging results
+  - returns a list with outputs from all iterations
+```{r}
+results = foreach(i=1:10) %dopar% {  
+  data.frame(feature=rnorm(10))
+}
+class(results)
+```
+
+  - returns a data frame
+    + a data frame which store in each column results from one iteration.
+```{r}
+results = foreach(i=1:10, .combine=data.frame) %dopar% {  
+  data.frame(feature=rnorm(10))
+}
+class(results)
+```
+
+### Custom merger
+
+```{r}
+merge.by.time <- function(a, b) {  
+  merge(a, b, by='timestamp', suffixes=c('', ncol(a)))
+}
+
+results = foreach(i=1:5, .combine=merge.by.time) %dopar% {  
+  data.frame(timestamp=sample(1:10), feature=rnorm(10))
+}
+
+print(results)
+```
+
+# caret parallel training template
+  - NOTE: keep in mind that parallel processing in R will utilize almost all of your system memory while training models and will only free the memory after the instructions have completed.
+```{r}
+library(doParallel)
+cl <- makeCluster(detectCores())
+
+registerDoParallel(cl)
+# machine learning code goes in here
+stopCluster(cl)
+```
+
+
+
